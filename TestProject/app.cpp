@@ -56,8 +56,13 @@ void RenderGraphCanvas() {
         Node& node = nodes[i];
         ImVec2& pos = node.pos;
 
+        ImVec2 rectMin = ImVec2(pos.x - 15, pos.y - 15);
+        ImVec2 rectMax = ImVec2(pos.x + 15, pos.y + 15);
+        bool isNodeHovered = ImGui::IsMouseHoveringRect(rectMin, rectMax);
+
+
         // If the node is selected, draw a border around it
-        if (i == selectedNode) {
+        if (i == selectedNode || isNodeHovered) {
             ImVec2 rectMin = ImVec2(pos.x - 12, pos.y - 12);
             ImVec2 rectMax = ImVec2(pos.x + 12, pos.y + 12);
             ImGui::GetWindowDrawList()->AddRect(rectMin, rectMax, IM_COL32(255, 0, 0, 255));
@@ -73,6 +78,24 @@ void RenderGraphCanvas() {
         ImVec2 textPos = ImVec2(pos.x - textSize.x * 0.5f, pos.y - textSize.y * 0.5f);
 
         ImGui::GetWindowDrawList()->AddText(textPos, IM_COL32(0, 0, 0, 255), buffer);
+
+        // Handle node dragging
+        if (isNodeHovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            selectedNode = i;
+        }
+
+        if (selectedNode == i && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+            // Node is being dragged
+            pos.x += ImGui::GetIO().MouseDelta.x;
+            pos.y += ImGui::GetIO().MouseDelta.y;
+        }
+
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+            selectedNode = -1;
+        }
+
+
+
     }
 
     // Example: Render links
@@ -90,7 +113,7 @@ void RenderGraphCanvas() {
 }
 
 void RenderControls() {
- 
+
     float controlWindowWidth = 200;
     float controlWindowHeight = 100;
     ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x - controlWindowWidth) * 0.5f, ImGui::GetIO().DisplaySize.y - 0 - controlWindowHeight), ImGuiCond_Always);
